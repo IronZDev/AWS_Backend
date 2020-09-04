@@ -7,11 +7,11 @@ const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY, // aws access id here
   secretAccessKey: process.env.AWS_SECRET, // aws secret access key here
   sessionToken: process.env.AWS_SESSION_TOKEN,
-  useAccelerateEndpoint: false,
+  useAccelerateEndpoint: true,
   region: 'us-east-1',
 });
 const params = {
-  Bucket: "mstokfisz-to-process",
+  Bucket: "images-to-process-mstokfisz",
   Key: '',
   Expires: 60*60, // expiry time 1h
   ACL: "private",
