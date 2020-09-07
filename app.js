@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const port = 5000;
+const mime = require('mime-types')
 
 const AWS = require("aws-sdk");
 
@@ -33,7 +34,8 @@ app.post('/signed-form-upload', async (req, res) => {
     Fields: {
       Key: req.body.filename,
       'X-Amz-Meta-Rotation': req.body.rotation,
-      'success_action_status': '201'
+      'success_action_status': '201',
+      'Content-Type': mime.lookup(req.body.filename)
     },
   };
   const form = await (new Promise((resolve, reject) => {
@@ -69,7 +71,7 @@ async function getAllImagesFromBucket(bucketName) {
   const fileKeys = files.Contents.map(file => file.Key);
   console.log(fileKeys);
   const response = [];
-  for (key of fileKeys) {
+  for (let key of fileKeys) {
     const url = client.getSignedUrl('getObject', {
       Bucket: bucketName,
       Key: key,
@@ -86,8 +88,7 @@ app.get('/get-images', async (req, res) => {
 });
 
 app.get('/get-transformed-images', async (req, res) => {
-  const imageList = await getAllImagesFromBucket('transformed-images-mstokfisz\n');
+  const imageList = await getAllImagesFromBucket('transformed-images-mstokfisz');
   return res.json(imageList);
 });
-
 app.listen(port, () => console.log(`Server listening on port ${port}!`));
