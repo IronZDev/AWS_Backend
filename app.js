@@ -27,15 +27,16 @@ app.post('/signed-form-upload', async (req, res) => {
 
   const client = new AWS.S3(options);
   console.log("Creating signature for: " + req.body.filename + "... ");
+  const key = new Date().toISOString() + "/" + req.body.filename;
 
   const params = {
     Bucket: 'images-to-process-mstokfisz',
-    Key: req.body.filename,
+    Key: key,
     Fields: {
-      Key: req.body.filename,
-      'X-Amz-Meta-Rotation': req.body.rotation,
+      Key: key,
       'success_action_status': '201',
-      'Content-Type': mime.lookup(req.body.filename)
+      'Content-Type': mime.lookup(req.body.filename),
+      'X-Amz-Meta-Filename': req.body.filename
     },
   };
   const form = await (new Promise((resolve, reject) => {
@@ -77,7 +78,8 @@ async function getAllImagesFromBucket(bucketName) {
       Key: key,
       Expires: 600 // 10 min
     });
-    response.push({ key, url });
+    const filename = key.split('/').slice(-1)[0];
+    response.push({ key, url, filename });
   }
   return response;
 }
@@ -91,4 +93,23 @@ app.get('/get-transformed-images', async (req, res) => {
   const imageList = await getAllImagesFromBucket('transformed-images-mstokfisz');
   return res.json(imageList);
 });
+
+app.post('/send-sqs-message', async (req, res) => {
+  const SQS = new AWS.SQS();
+  SQS.sendMessage({
+    QueueUrl: 'https://sqs.us-east-1.amazonaws.com/575075258561/images-queue',
+    MessageBody: JSON.stringify({
+      key: req.body.key,
+      rotation: req.body.rotation
+    })
+  }, (err, data) => {
+    if (err) {
+      return err;
+    } else {
+      console.log(data);
+    }
+  });
+  return 'Message sent!';
+});
+
 app.listen(port, () => console.log(`Server listening on port ${port}!`));
