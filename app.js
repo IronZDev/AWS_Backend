@@ -85,13 +85,21 @@ async function getAllImagesFromBucket(bucketName) {
 }
 
 app.get('/get-images', async (req, res) => {
-  const imageList = await getAllImagesFromBucket('images-to-process-mstokfisz');
-  return res.json(imageList);
+  try {
+    const imageList = await getAllImagesFromBucket('images-to-process-mstokfisz');
+    return res.json(imageList);
+  } catch (err) {
+    return res.status(500).json({message: err.message});
+  }
 });
 
 app.get('/get-transformed-images', async (req, res) => {
-  const imageList = await getAllImagesFromBucket('transformed-images-mstokfisz');
-  return res.json(imageList);
+  try {
+    const imageList = await getAllImagesFromBucket('transformed-images-mstokfisz');
+    return res.json(imageList);
+  } catch (err) {
+    return res.status(500).json({message: err.message});
+  }
 });
 
 app.post('/send-sqs-message', async (req, res) => {
@@ -104,12 +112,12 @@ app.post('/send-sqs-message', async (req, res) => {
     })
   }, (err, data) => {
     if (err) {
-      return err;
+      return res.status(500).json({message: err});
     } else {
       console.log(data);
     }
   });
-  return 'Message sent!';
+  return res.status(201).json({message: 'Message sent!'});
 });
 
 app.listen(port, () => console.log(`Server listening on port ${port}!`));
